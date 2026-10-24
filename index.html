@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opiom — Espace de travail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B1815;
+    --ink-2:#221E19;
+    --surface:#28231D;
+    --surface-2:#332C23;
+    --border:#463D31;
+    --border-soft:#3A3226;
+    --cream:#F2ECE1;
+    --cream-dim:#B4A997;
+    --cream-faint:#7E7566;
+    --poppy:#C6472E;
+    --poppy-soft:rgba(198,71,46,.16);
+    --gold:#D4A94C;
+    --gold-soft:rgba(212,169,76,.16);
+    --sage:#82A488;
+    --sage-soft:rgba(130,164,136,.16);
+    --slate:#7C97AC;
+    --slate-soft:rgba(124,151,172,.16);
+    --shadow: 0 12px 32px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{background:var(--poppy);color:var(--cream);}
+  a{color:inherit;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;font-weight:600;letter-spacing:-.01em;}
+
+  /* ---------- layout ---------- */
+  #app{display:flex;min-height:100vh;}
+  .sidebar{
+    width:230px;flex-shrink:0;background:var(--ink-2);
+    border-right:1px solid var(--border-soft);
+    display:flex;flex-direction:column;
+    padding:26px 18px;position:sticky;top:0;height:100vh;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:0 4px 26px 4px;border-bottom:1px solid var(--border-soft);margin-bottom:18px;}
+  .pod{width:26px;height:26px;flex-shrink:0;position:relative;}
+  .pod svg{width:100%;height:100%;}
+  .brand-text{display:flex;flex-direction:column;line-height:1;}
+  .brand-text b{font-family:'Fraunces',serif;font-size:19px;letter-spacing:.04em;}
+  .brand-text span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--cream-faint);margin-top:4px;}
+
+  nav.tabs{display:flex;flex-direction:column;gap:2px;}
+  .tab-btn{
+    display:flex;align-items:center;gap:10px;
+    text-align:left;background:none;border:none;color:var(--cream-dim);
+    font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;
+    padding:10px 12px;border-radius:8px;cursor:pointer;
+    border-left:2px solid transparent;transition:.15s ease;
+  }
+  .tab-btn:hover{background:var(--surface);color:var(--cream);}
+  .tab-btn.active{background:var(--surface);color:var(--cream);border-left:2px solid var(--poppy);}
+  .tab-btn .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0;}
+
+  .sidebar-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--border-soft);}
+  .sidebar-foot p{font-size:11px;color:var(--cream-faint);line-height:1.5;margin:0;}
+
+  .main{flex:1;min-width:0;padding:30px 40px 60px;}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:28px;flex-wrap:wrap;}
+  .topbar h1{font-size:26px;}
+  .topbar .sub{color:var(--cream-faint);font-size:13px;margin-top:6px;}
+  .top-actions{display:flex;gap:10px;align-items:center;}
+
+  .btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+    border-radius:8px;padding:9px 15px;border:1px solid var(--border);
+    background:var(--surface);color:var(--cream);cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;transition:.15s ease;white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--cream-faint);}
+  .btn-primary{background:var(--poppy);border-color:var(--poppy);color:#fff;}
+  .btn-primary:hover{background:#b03e28;border-color:#b03e28;}
+  .btn-ghost{background:none;border:1px solid var(--border-soft);}
+  .btn-danger{background:none;border:1px solid var(--poppy);color:var(--poppy);}
+  .btn-danger:hover{background:var(--poppy-soft);}
+  .btn-sm{padding:6px 10px;font-size:12px;}
+  .btn-icon{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px;}
+
+  /* ---------- kanban ---------- */
+  .board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:14px;overflow-x:auto;padding-bottom:6px;}
+  .col{background:var(--ink-2);border:1px solid var(--border-soft);border-radius:12px;padding:14px;min-width:220px;display:flex;flex-direction:column;}
+  .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .col-title{font-size:12px;font-weight:600;letter-spacing:.02em;display:flex;align-items:center;gap:7px;}
+  .col-title .seed{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .col-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--cream-faint);background:var(--surface);padding:2px 7px;border-radius:20px;}
+  .col-cards{display:flex;flex-direction:column;gap:10px;min-height:40px;}
+  .card{
+    background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;
+    padding:12px 13px;cursor:pointer;transition:.15s ease;
+  }
+  .card:hover{border-color:var(--cream-faint);transform:translateY(-1px);box-shadow:var(--shadow);}
+  .card .p-name{font-size:13.5px;font-weight:600;margin-bottom:3px;line-height:1.3;}
+  .card .p-client{font-size:12px;color:var(--cream-faint);margin-bottom:9px;}
+  .card .p-meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--cream-dim);}
+  .card .p-meta .late{color:var(--poppy);font-weight:600;}
+  .bar{height:4px;border-radius:3px;background:var(--border);overflow:hidden;margin:8px 0;}
+  .bar-fill{height:100%;background:var(--gold);border-radius:3px;}
+  .empty-col{color:var(--cream-faint);font-size:12px;padding:14px 4px;text-align:center;border:1px dashed var(--border-soft);border-radius:8px;}
+
+  /* ---------- table ---------- */
+  .panel{background:var(--ink-2);border:1px solid var(--border-soft);border-radius:12px;padding:20px;}
+  .filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  select, input, textarea{
+    font-family:'Inter',sans-serif;background:var(--surface);border:1px solid var(--border);
+    color:var(--cream);border-radius:7px;padding:8px 11px;font-size:13px;outline:none;
+  }
+  select:focus, input:focus, textarea:focus{border-color:var(--gold);}
+  table{width:100%;border-collapse:collapse;}
+  th{
+    text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--cream-faint);font-weight:600;padding:0 12px 10px;border-bottom:1px solid var(--border-soft);
+  }
+  td{padding:13px 12px;border-bottom:1px solid var(--border-soft);font-size:13px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr.row:hover{background:var(--surface);cursor:pointer;}
+  .t-name{font-weight:600;}
+  .t-client{color:var(--cream-faint);font-size:12px;}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+    padding:4px 10px;border-radius:20px;white-space:nowrap;
+  }
+  .pill .seed{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .pill-actif{background:var(--slate-soft);color:var(--slate);}
+  .pill-completion{background:var(--gold-soft);color:var(--gold);}
+  .pill-pret{background:var(--sage-soft);color:var(--sage);}
+  .pill-livre{background:rgba(180,169,151,.16);color:var(--cream-dim);}
+  .pill-modification{background:var(--poppy-soft);color:var(--poppy);}
+  .pill-nouvelle{background:var(--slate-soft);color:var(--slate);}
+  .pill-en_cours{background:var(--gold-soft);color:var(--gold);}
+  .pill-terminee{background:var(--sage-soft);color:var(--sage);}
+
+  /* ---------- cards grid (clients / equipe) ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+  .entity-card{background:var(--ink-2);border:1px solid var(--border-soft);border-radius:12px;padding:18px;cursor:pointer;transition:.15s ease;}
+  .entity-card:hover{border-color:var(--cream-faint);transform:translateY(-1px);box-shadow:var(--shadow);}
+  .entity-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+  .avatar{
+    width:38px;height:38px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:14px;color:var(--gold);flex-shrink:0;
+  }
+  .entity-card h3{font-size:15px;margin-bottom:2px;}
+  .entity-card .role{font-size:12px;color:var(--cream-faint);}
+  .entity-line{font-size:12.5px;color:var(--cream-dim);margin-top:6px;display:flex;gap:7px;align-items:baseline;}
+  .entity-line b{color:var(--cream-faint);font-weight:600;min-width:64px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+  .workload{margin-top:12px;padding-top:12px;border-top:1px solid var(--border-soft);font-size:11.5px;color:var(--cream-faint);}
+  .workload b{color:var(--gold);font-family:'IBM Plex Mono',monospace;}
+
+  .demande-card{background:var(--ink-2);border:1px solid var(--border-soft);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+  .demande-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+  .demande-top h3{font-size:14.5px;}
+  .demande-proj{font-size:11.5px;color:var(--gold);margin-top:3px;}
+  .demande-desc{font-size:12.5px;color:var(--cream-dim);margin-top:8px;line-height:1.5;}
+  .checklist{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+  .check-item{display:flex;align-items:center;gap:9px;font-size:12.5px;cursor:pointer;}
+  .check-item input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;}
+  .check-item.done span{text-decoration:line-through;color:var(--cream-faint);}
+  .check-progress{font-size:11px;color:var(--cream-faint);margin-top:2px;}
+  .demande-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border-soft);}
+  .demande-foot .date{font-size:11px;color:var(--cream-faint);}
+
+  /* ---------- section head ---------- */
+  .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .section-head h2{font-size:18px;}
+  .empty-state{padding:50px 20px;text-align:center;color:var(--cream-faint);font-size:13px;border:1px dashed var(--border-soft);border-radius:12px;}
+
+  /* ---------- modal ---------- */
+  .backdrop{
+    position:fixed;inset:0;background:rgba(10,8,6,.6);backdrop-filter:blur(2px);
+    display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;
+    animation:fade .15s ease;
+  }
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  .modal{
+    background:var(--ink-2);border:1px solid var(--border-soft);border-radius:14px;
+    width:520px;max-width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow);
+    animation:pop .16s ease;
+  }
+  @keyframes pop{from{opacity:0;transform:scale(.97) translateY(6px);}to{opacity:1;transform:scale(1) translateY(0);}}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--border-soft);}
+  .modal-head h2{font-size:16.5px;}
+  .modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px;}
+  .field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--cream-faint);margin-bottom:6px;}
+  .field input, .field select, .field textarea{width:100%;}
+  .field textarea{resize:vertical;min-height:64px;font-family:'Inter',sans-serif;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-foot{display:flex;justify-content:space-between;gap:10px;padding:16px 22px 20px;border-top:1px solid var(--border-soft);}
+  .checklist-edit{display:flex;flex-direction:column;gap:8px;}
+  .checklist-edit .row{display:flex;gap:8px;align-items:center;}
+  .checklist-edit .row input[type=text]{flex:1;}
+  .checklist-edit .del{background:none;border:none;color:var(--cream-faint);cursor:pointer;font-size:16px;line-height:1;padding:4px;}
+  .checklist-edit .del:hover{color:var(--poppy);}
+
+  /* ---------- journal ---------- */
+  .journal-day{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--cream-faint);font-weight:600;margin:20px 0 8px;}
+  .journal-day:first-child{margin-top:0;}
+  .journal-item{display:flex;align-items:flex-start;gap:11px;padding:11px 4px;border-bottom:1px solid var(--border-soft);}
+  .journal-item:last-child{border-bottom:none;}
+  .journal-dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+  .journal-text{flex:1;font-size:13px;line-height:1.55;color:var(--cream-dim);}
+  .journal-text b{color:var(--cream);}
+  .journal-time{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--cream-faint);white-space:nowrap;margin-top:3px;}
+
+  /* ---------- name modal ---------- */
+  .name-note{font-size:12px;color:var(--cream-faint);margin:0;line-height:1.5;}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--surface-2);border:1px solid var(--border);color:var(--cream);
+    padding:10px 18px;border-radius:8px;font-size:12.5px;opacity:0;pointer-events:none;
+    transition:.25s ease;z-index:200;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #toast.err{border-color:var(--poppy);color:var(--poppy);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:880px){
+    #app{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:relative;flex-direction:row;align-items:center;padding:14px 16px;overflow-x:auto;}
+    .brand{border:none;padding:0 14px 0 0;margin:0;}
+    nav.tabs{flex-direction:row;}
+    .sidebar-foot{display:none;}
+    .main{padding:22px 18px 50px;}
+    .board{grid-template-columns:repeat(5,220px);}
+    .field-row{grid-template-columns:1fr;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js"></script>
+<script>
+/* OPIOM Auth: renseigner l'URL et la clé publique Supabase (jamais service_role). */
+window.OPIOM_CONFIG = {url: "https://vzhoglufkwxliifdyanq.supabase.co", anonKey: "sb_publishable_7WABQEQaX7kzq2OFG8kXZA_1XPK9Pw3"};
+</script>
+<style>
+#auth-gate{position:fixed;inset:0;background:#1b1815;color:#f2ece1;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;padding:24px}
+#auth-card{width:min(440px,100%);padding:32px;border:1px solid #463d31;border-radius:20px;background:#28231d}
+#auth-card h1{margin:0 0 12px;font-size:27px}#auth-card p{color:#b4a997}
+#auth-card input{display:block;width:100%;margin:12px 0;padding:14px;background:#1b1815;border:1px solid #463d31;color:white;border-radius:9px}
+#auth-card button{padding:13px 18px;background:#c6472e;color:white;border:0;border-radius:9px;cursor:pointer}
+#auth-card small{display:block;margin-top:12px;color:#f3b19f}
+#logout-opiom{position:fixed;right:16px;bottom:16px;z-index:9000;background:#c6472e;color:white;border:0;border-radius:9px;padding:10px;cursor:pointer}
+</style>
+<div id="auth-gate"><div id="auth-card"><h1>OPIOM · Connexion</h1><p>Accès réservé aux collaborateurs autorisés.</p><form id="auth-form"><input id="auth-email" type="email" autocomplete="username" placeholder="Adresse email" required><input id="auth-password" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="submit">Se connecter</button></form><small id="auth-error" role="alert"></small></div></div>
+<script>
+window.opiomReady=(async()=>{
+ const cfg=window.OPIOM_CONFIG;
+ const error=document.getElementById('auth-error');
+ if(!cfg.url.startsWith('https://')||!cfg.anonKey.startsWith('sb_publishable_')){error.textContent='Configuration Supabase manquante. Voir README.md';return new Promise(()=>{});}
+ const sb=window.supabase.createClient(cfg.url,cfg.anonKey);
+ window.opiomSupabase=sb;
+ async function check(){
+  const {data:{user},error:e}=await sb.auth.getUser();
+  if(e||!user)return false;
+  const {data:profile,error:pe}=await sb.from('profiles').select('role,active,display_name').eq('id',user.id).single();
+  if(pe||!profile?.active){error.textContent='Compte non activé. Contactez un administrateur.';await sb.auth.signOut();return false;}
+  window.opiomProfile=profile;window.opiomUser=user;
+  document.getElementById('auth-gate').remove();
+  const logout=document.createElement('button');logout.id='logout-opiom';logout.textContent='Déconnexion';
+  logout.onclick=async()=>{await sb.auth.signOut();location.reload()};document.body.appendChild(logout);
+  return true;
+ }
+ if(await check())return;
+ return new Promise(resolve=>{
+  document.getElementById('auth-form').onsubmit=async ev=>{
+   ev.preventDefault();error.textContent='Connexion en cours…';
+   const {error:e}=await sb.auth.signInWithPassword({email:document.getElementById('auth-email').value,password:document.getElementById('auth-password').value});
+   if(e){error.textContent='Identifiants invalides ou connexion impossible.';return;}
+   if(await check())resolve();
+  };
+ });
+})();
+</script>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="pod">
+        <svg viewBox="0 0 26 26"><circle cx="13" cy="6" r="2.4" fill="#C6472E"/><circle cx="7" cy="11" r="2.4" fill="#D4A94C"/><circle cx="19" cy="11" r="2.4" fill="#D4A94C"/><circle cx="13" cy="16" r="2.4" fill="#82A488"/><circle cx="13" cy="13" r="1.6" fill="#F2ECE1"/></svg>
+      </div>
+      <div class="brand-text"><b>OPIOM</b><span>Espace équipe</span></div>
+    </div>
+    <nav class="tabs" id="nav"></nav>
+    <div class="sidebar-foot">
+      <p>Modifiable par toute personne disposant du lien. Les changements sont visibles par toute l'équipe.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="page-title">Tableau de bord</h1>
+        <div class="sub" id="page-sub">Vue d'ensemble de l'activité de l'agence</div>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-ghost btn-icon" data-action="refresh" title="Actualiser">⟳</button>
+        <button class="btn btn-primary" id="primary-add">+ Ajouter</button>
+      </div>
+    </div>
+    <div id="tab-content"></div>
+  </main>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast"></div>
+
+<script>
+/* ============ CONFIG ============ */
+const TABS = [
+  {id:'dashboard', label:'Tableau de bord', sub:"Vue d'ensemble de l'activité de l'agence"},
+  {id:'suivi', label:'Suivi de projet', sub:"Progression, échéances et charge de travail"},
+  {id:'demandes', label:'Demandes & checklists', sub:"Ce qui est attendu, et où ça en est"},
+  {id:'clients', label:'Canevas client', sub:"Toutes les infos clients au même endroit"},
+  {id:'equipe', label:'Équipe', sub:"Les personnes et leur poste"},
+  {id:'journal', label:'Journal d\'activité', sub:"Historique des changements de toute l'équipe"},
+];
+const STATUTS_PROJET = {
+  actif:        {label:'Projets actifs',                 short:'Actif',        css:'actif',        color:'var(--slate)'},
+  completion:   {label:'Complétion & démarches en cours', short:'En cours',     css:'completion',    color:'var(--gold)'},
+  pret:         {label:'Prêt à livrer',                   short:'Prêt',         css:'pret',          color:'var(--sage)'},
+  livre:        {label:'Déjà livré',                      short:'Livré',        css:'livre',         color:'var(--cream-dim)'},
+  modification: {label:'Modification',                    short:'Modification', css:'modification',  color:'var(--poppy)'},
+};
+const STATUTS_DEMANDE = {
+  nouvelle: {label:'Nouvelle', css:'nouvelle'},
+  en_cours: {label:'En cours', css:'en_cours'},
+  terminee: {label:'Terminée', css:'terminee'},
+};
+
+
+// Stockage sécurisé via Supabase. Les politiques RLS restent la source de vérité.
+window.storage={
+ async get(key,shared){
+  if(!shared){return {value:window.opiomProfile.display_name||window.opiomUser.email};}
+  const {data,error}=await window.opiomSupabase.from('workspace_data').select('value').eq('key',key).maybeSingle();
+  if(error)throw error;
+  return data?{value:JSON.stringify(data.value)}:null;
+ },
+ async set(key,value,shared){
+  if(!shared){return;}
+  if(key==='opiom:team'&&!['owner','admin'].includes(window.opiomProfile.role))throw new Error('Accès administrateur requis');
+  const {error}=await window.opiomSupabase.from('workspace_data').upsert({key,value:JSON.parse(value),updated_at:new Date().toISOString()},{onConflict:'key'});
+  if(error)throw error;
+  const {error:auditError}=await window.opiomSupabase.from('audit_events').insert({actor:window.opiomUser.id,action:'Mise à jour '+key});
+  if(auditError)console.warn('Audit non enregistré',auditError.message);
+ }
+};
+
+/* ============ SEED DATA ============ */
+const SEED_PROJECTS = [
+  {id:'p1', nomProjet:'Refonte identité visuelle', client:'Maison Verlaine', dateLimite:'2026-08-05', avancement:65, statut:'actif', charge:'Léa Dumont', notes:'Palette et logo validés, travail sur la charte en cours.'},
+  {id:'p2', nomProjet:'Campagne réseaux sociaux Q3', client:'Nova Cosmétiques', dateLimite:'2026-07-28', avancement:40, statut:'completion', charge:'Karim Aziz', notes:'En attente des retours client sur les visuels V2.'},
+  {id:'p3', nomProjet:'Site vitrine', client:'Atelier Brume', dateLimite:'2026-07-24', avancement:92, statut:'pret', charge:'Léa Dumont', notes:'Derniers tests avant mise en ligne.'},
+  {id:'p4', nomProjet:'Packaging gamme été', client:'Nova Cosmétiques', dateLimite:'2026-06-30', avancement:100, statut:'livre', charge:'Sofia Nadal', notes:'Livré et validé par le client.'},
+  {id:'p5', nomProjet:'Brochure institutionnelle', client:'Maison Verlaine', dateLimite:'2026-07-22', avancement:80, statut:'modification', charge:'Karim Aziz', notes:'Le client demande une révision de la mise en page p.4.'},
+];
+const SEED_CLIENTS = [
+  {id:'c1', nom:'Maison Verlaine', secteur:'Mode & Textile', contact:'Élise Verlaine', email:'elise@maisonverlaine.fr', telephone:'+33 6 12 34 56 78', adresse:'12 rue des Tanneurs, Lyon', brief:"Marque de prêt-à-porter haut de gamme en quête d'une identité plus contemporaine."},
+  {id:'c2', nom:'Nova Cosmétiques', secteur:'Beauté', contact:'Rachid Nova', email:'rachid@novacosmetiques.com', telephone:'+33 7 88 99 00 11', adresse:'45 avenue des Champs, Paris', brief:"Lancement d'une gamme été, avec un besoin de communication récurrente."},
+  {id:'c3', nom:'Atelier Brume', secteur:'Artisanat', contact:'Noé Brume', email:'contact@atelierbrume.fr', telephone:'+33 6 45 12 78 90', adresse:'3 impasse des Forges, Nantes', brief:"Atelier de céramique en recherche d'une présence en ligne simple et élégante."},
+];
+const SEED_TEAM = [
+  {id:'t1', nom:'Léa Dumont', poste:'Directrice artistique', email:'lea@opiom.agency', telephone:'+33 6 01 02 03 04'},
+  {id:'t2', nom:'Karim Aziz', poste:'Chef de projet', email:'karim@opiom.agency', telephone:'+33 6 11 22 33 44'},
+  {id:'t3', nom:'Sofia Nadal', poste:'Designer graphique', email:'sofia@opiom.agency', telephone:'+33 6 55 66 77 88'},
+  {id:'t4', nom:'Yanis Cole', poste:'Développeur web', email:'yanis@opiom.agency', telephone:'+33 6 99 88 77 66'},
+];
+const SEED_DEMANDES = [
+  {id:'d1', titre:'Valider les 3 propositions de logo', projet:'Refonte identité visuelle', description:'Le client doit choisir une direction avant vendredi.', statut:'en_cours', date:'2026-07-18', checklist:[{t:'Envoyer les 3 pistes',done:true},{t:'Relancer le client',done:true},{t:'Recueillir la décision finale',done:false}]},
+  {id:'d2', titre:'Corriger la mise en page p.4', projet:'Brochure institutionnelle', description:'Ajuster les marges et la hiérarchie typographique.', statut:'nouvelle', date:'2026-07-19', checklist:[{t:'Revoir la grille',done:false},{t:'Exporter le PDF corrigé',done:false}]},
+  {id:'d3', titre:'Préparer la mise en ligne', projet:'Site vitrine', description:'Checklist finale avant livraison au client.', statut:'en_cours', date:'2026-07-17', checklist:[{t:'Test responsive',done:true},{t:'Vérifier les liens',done:true},{t:'Optimiser les images',done:false},{t:'Configurer le nom de domaine',done:false}]},
+];
+
+/* ============ STATE ============ */
+let projects = [], clients = [], team = [], demandes = [], activity = [];
+let currentTab = 'dashboard';
+let modalChecklist = [];
+let myName = '';
+
+/* ============ STORAGE ============ */
+async function loadKey(key, seed){
+  try{
+    const r = await window.storage.get(key, true);
+    if(r && r.value) return JSON.parse(r.value);
+    await window.storage.set(key, JSON.stringify(seed), true);
+    return JSON.parse(JSON.stringify(seed));
+  }catch(e){
+    try{ await window.storage.set(key, JSON.stringify(seed), true); }catch(e2){}
+    return JSON.parse(JSON.stringify(seed));
+  }
+}
+async function saveKey(key, value, silent){
+  try{
+    await window.storage.set(key, JSON.stringify(value), true);
+    if(!silent) showToast('Enregistré — visible par toute l\'équipe');
+  }catch(e){
+    if(!silent) showToast('Échec de l\'enregistrement, réessayez', true);
+  }
+}
+async function loadAll(){
+  [projects, clients, team, demandes, activity] = await Promise.all([
+    loadKey('opiom:projects', []),
+    loadKey('opiom:clients', []),
+    loadKey('opiom:team', []),
+    loadKey('opiom:demandes', []),
+    loadKey('opiom:activity', []),
+  ]);
+}
+async function logActivity(entity, sentence){
+  activity.unshift({id: uid(), ts: Date.now(), auteur: myName || 'Quelqu\'un', entity, sentence});
+  activity = activity.slice(0, 300);
+  await saveKey('opiom:activity', activity, true);
+}
+async function ensureName(){
+  try{
+    const r = await window.storage.get('opiom:my-name', false);
+    if(r && r.value){ myName = r.value; return; }
+  }catch(e){}
+  myName = await promptName();
+}
+function promptName(){
+  return new Promise(resolve=>{
+    document.getElementById('modal-root').innerHTML = `
+      <div class="backdrop">
+        <div class="modal" onclick="event.stopPropagation()">
+          <div class="modal-head"><h2>Bienvenue dans l'espace Opiom</h2></div>
+          <div class="modal-body">
+            <div class="field"><label>Comment devons-nous vous appeler ?</label><input id="name-input" placeholder="Ex. Léa Dumont"></div>
+            <p class="name-note">Ce nom sert à identifier vos actions dans le journal d'activité. Il reste privé à cet appareil et n'est jamais partagé avec l'équipe autrement.</p>
+          </div>
+          <div class="modal-foot"><span></span><button class="btn btn-primary" id="name-confirm">Continuer</button></div>
+        </div>
+      </div>`;
+    const input = document.getElementById('name-input');
+    input.focus();
+    const confirmName = async () => {
+      const val = input.value.trim() || "Membre de l'équipe";
+      try{ await window.storage.set('opiom:my-name', val, false); }catch(e){}
+      document.getElementById('modal-root').innerHTML = '';
+      resolve(val);
+    };
+    document.getElementById('name-confirm').addEventListener('click', confirmName);
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') confirmName(); });
+  });
+}
+
+/* ============ HELPERS ============ */
+function uid(){ return 'id_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmtDate(d){
+  if(!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  if(isNaN(dt)) return d;
+  return dt.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'});
+}
+function isLate(dateLimite, statut){
+  if(statut === 'livre') return false;
+  const dt = new Date(dateLimite + 'T00:00:00');
+  if(isNaN(dt)) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return dt < today;
+}
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function initials(name){
+  return (name||'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+}
+function showToast(msg, isErr){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+function dayLabel(ts){
+  const d = new Date(ts);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const yest = new Date(today); yest.setDate(yest.getDate()-1);
+  const dOnly = new Date(d); dOnly.setHours(0,0,0,0);
+  if(dOnly.getTime()===today.getTime()) return "Aujourd'hui";
+  if(dOnly.getTime()===yest.getTime()) return 'Hier';
+  return d.toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric'});
+}
+function pill(map, key){
+  const s = map[key] || {label:key, css:key};
+  return `<span class="pill pill-${s.css}"><span class="seed" style="background:currentColor"></span>${s.label}</span>`;
+}
+
+/* ============ NAV / TABS ============ */
+function renderNav(){
+  document.getElementById('nav').innerHTML = TABS.map(t => `
+    <button class="tab-btn ${t.id===currentTab?'active':''}" data-action="nav" data-tab="${t.id}">
+      <span class="dot"></span>${t.label}
+    </button>`).join('');
+}
+function switchTab(id){
+  currentTab = id;
+  const t = TABS.find(x=>x.id===id);
+  document.getElementById('page-title').textContent = t.label;
+  document.getElementById('page-sub').textContent = t.sub;
+  const addBtn = document.getElementById('primary-add');
+  const map = {dashboard:'new-project', suivi:'new-project', demandes:'new-demande', clients:'new-client', equipe:'new-team'};
+  const labels = {dashboard:'+ Nouveau projet', suivi:'+ Nouveau projet', demandes:'+ Nouvelle demande', clients:'+ Nouveau client', equipe:'+ Nouveau membre'};
+  if(id === 'journal'){
+    addBtn.style.display = 'none';
+  }else{
+    addBtn.style.display = 'inline-flex';
+    addBtn.dataset.action = map[id];
+    addBtn.textContent = labels[id];
+  }
+  renderNav();
+  renderCurrent();
+}
+function renderCurrent(){
+  const fns = {dashboard:renderDashboard, suivi:renderSuivi, demandes:renderDemandes, clients:renderClients, equipe:renderEquipe, journal:renderJournal};
+  fns[currentTab]();
+}
+
+/* ============ JOURNAL D'ACTIVITÉ ============ */
+function renderJournal(){
+  if(!activity.length){
+    document.getElementById('tab-content').innerHTML = `<div class="empty-state">Aucune activité pour l'instant. Chaque création, modification ou suppression apparaîtra ici automatiquement, pour toute l'équipe.</div>`;
+    return;
+  }
+  const colors = {projet:'var(--slate)', demande:'var(--gold)', client:'var(--sage)', equipe:'var(--poppy)', checklist:'var(--cream-dim)'};
+  let lastLabel = null;
+  let rows = '';
+  activity.forEach(a=>{
+    const label = dayLabel(a.ts);
+    if(label !== lastLabel){ rows += `<div class="journal-day">${label}</div>`; lastLabel = label; }
+    const time = new Date(a.ts).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+    rows += `
+      <div class="journal-item">
+        <span class="journal-dot" style="background:${colors[a.entity] || 'var(--cream-faint)'}"></span>
+        <span class="journal-text"><b>${escapeHtml(a.auteur)}</b> ${escapeHtml(a.sentence)}</span>
+        <span class="journal-time">${time}</span>
+      </div>`;
+  });
+  document.getElementById('tab-content').innerHTML = `<div class="panel">${rows}</div>`;
+}
+
+/* ============ DASHBOARD ============ */
+function renderDashboard(){
+  const cols = Object.keys(STATUTS_PROJET).map(key=>{
+    const list = projects.filter(p=>p.statut===key);
+    const s = STATUTS_PROJET[key];
+    const cards = list.length ? list.map(p=>`
+      <div class="card" data-action="edit-project" data-id="${p.id}">
+        <div class="p-name">${escapeHtml(p.nomProjet)}</div>
+        <div class="p-client">${escapeHtml(p.client)}</div>
+        <div class="bar"><div class="bar-fill" style="width:${p.avancement}%"></div></div>
+        <div class="p-meta">
+          <span class="${isLate(p.dateLimite,p.statut)?'late':''}">${isLate(p.dateLimite,p.statut)?'⚠ ':''}${fmtDate(p.dateLimite)}</span>
+          <span>${p.avancement}%</span>
+        </div>
+      </div>`).join('') : `<div class="empty-col">Aucun projet</div>`;
+    return `
+      <div class="col">
+        <div class="col-head">
+          <div class="col-title"><span class="seed" style="background:${s.color}"></span>${s.label}</div>
+          <span class="col-count">${list.length}</span>
+        </div>
+        <div class="col-cards">${cards}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('tab-content').innerHTML = `
+    <div class="section-head"><h2>Suivi processus des travaux</h2></div>
+    <div class="board">${cols}</div>
+  `;
+}
+
+/* ============ SUIVI DE PROJET ============ */
+function renderSuivi(){
+  const chargeOptions = ['', ...new Set(projects.map(p=>p.charge).filter(Boolean))];
+  document.getElementById('tab-content').innerHTML = `
+    <div class="panel">
+      <div class="filters">
+        <select id="f-statut"><option value="">Tous les statuts</option>${Object.entries(STATUTS_PROJET).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select>
+        <select id="f-charge"><option value="">Tous les chargés de travail</option>${chargeOptions.filter(Boolean).map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}</select>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Projet / Client</th><th>Date limite</th><th>Avancement</th><th>Statut</th><th>Chargé de travail</th>
+        </tr></thead>
+        <tbody id="suivi-rows"></tbody>
+      </table>
+      <div id="suivi-empty" style="display:none" class="empty-state">Aucun projet ne correspond à ces filtres.</div>
+    </div>
+  `;
+  const draw = () => {
+    const fs = document.getElementById('f-statut').value;
+    const fc = document.getElementById('f-charge').value;
+    const rows = projects.filter(p => (!fs || p.statut===fs) && (!fc || p.charge===fc));
+    document.getElementById('suivi-rows').innerHTML = rows.map(p=>`
+      <tr class="row" data-action="edit-project" data-id="${p.id}">
+        <td><div class="t-name">${escapeHtml(p.nomProjet)}</div><div class="t-client">${escapeHtml(p.client)}</div></td>
+        <td class="mono">${isLate(p.dateLimite,p.statut)?'⚠ ':''}${fmtDate(p.dateLimite)}</td>
+        <td style="min-width:140px"><div class="bar"><div class="bar-fill" style="width:${p.avancement}%"></div></div><span class="mono" style="font-size:11px;color:var(--cream-faint)">${p.avancement}%</span></td>
+        <td>${pill(STATUTS_PROJET, p.statut)}</td>
+        <td>${escapeHtml(p.charge || '—')}</td>
+      </tr>`).join('');
+    document.getElementById('suivi-empty').style.display = rows.length ? 'none' : 'block';
+  };
+  document.getElementById('f-statut').addEventListener('change', draw);
+  document.getElementById('f-charge').addEventListener('change', draw);
+  draw();
+}
+
+/* ============ DEMANDES & CHECKLISTS ============ */
+function renderDemandes(){
+  if(!demandes.length){
+    document.getElementById('tab-content').innerHTML = `<div class="empty-state">Aucune demande pour le moment. Ajoutez-en une pour lancer une checklist.</div>`;
+    return;
+  }
+  document.getElementById('tab-content').innerHTML = demandes.map(d=>{
+    const total = d.checklist.length;
+    const done = d.checklist.filter(c=>c.done).length;
+    return `
+    <div class="demande-card">
+      <div class="demande-top">
+        <div>
+          <h3>${escapeHtml(d.titre)}</h3>
+          ${d.projet ? `<div class="demande-proj">↳ ${escapeHtml(d.projet)}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${pill(STATUTS_DEMANDE, d.statut)}
+          <button class="btn btn-ghost btn-sm" data-action="edit-demande" data-id="${d.id}">Modifier</button>
+        </div>
+      </div>
+      ${d.description ? `<div class="demande-desc">${escapeHtml(d.description)}</div>` : ''}
+      <div class="checklist">
+        ${d.checklist.map((c,idx)=>`
+          <label class="check-item ${c.done?'done':''}">
+            <input type="checkbox" data-action="toggle-check" data-id="${d.id}" data-idx="${idx}" ${c.done?'checked':''}>
+            <span>${escapeHtml(c.t)}</span>
+          </label>`).join('')}
+      </div>
+      ${total ? `<div class="check-progress">${done}/${total} tâches terminées</div>` : ''}
+      <div class="demande-foot">
+        <span class="date mono">${fmtDate(d.date)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function toggleCheck(demandeId, idx){
+  const d = demandes.find(x=>x.id===demandeId);
+  if(!d) return;
+  const item = d.checklist[idx];
+  item.done = !item.done;
+  await saveKey('opiom:demandes', demandes);
+  await logActivity('checklist', `a ${item.done?'coché':'décoché'} « ${item.t} » dans « ${d.titre} »`);
+  renderDemandes();
+}
+
+/* ============ CLIENTS ============ */
+function renderClients(){
+  if(!clients.length){
+    document.getElementById('tab-content').innerHTML = `<div class="empty-state">Aucun client. Ajoutez votre premier canevas client.</div>`;
+    return;
+  }
+  document.getElementById('tab-content').innerHTML = `<div class="grid">${clients.map(c=>{
+    const nbProjets = projects.filter(p=>p.client===c.nom).length;
+    return `
+    <div class="entity-card" data-action="edit-client" data-id="${c.id}">
+      <div class="entity-top">
+        <div class="avatar">${initials(c.nom)}</div>
+      </div>
+      <h3>${escapeHtml(c.nom)}</h3>
+      <div class="role">${escapeHtml(c.secteur || '')}</div>
+      <div class="entity-line"><b>Contact</b>${escapeHtml(c.contact || '—')}</div>
+      <div class="entity-line"><b>Email</b>${escapeHtml(c.email || '—')}</div>
+      <div class="entity-line"><b>Téléphone</b>${escapeHtml(c.telephone || '—')}</div>
+      <div class="entity-line"><b>Adresse</b>${escapeHtml(c.adresse || '—')}</div>
+      ${c.brief ? `<div class="entity-line" style="margin-top:10px"><b>Brief</b>${escapeHtml(c.brief)}</div>` : ''}
+      <div class="workload">${nbProjets} projet${nbProjets>1?'s':''} associé${nbProjets>1?'s':''}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+/* ============ ÉQUIPE ============ */
+function renderEquipe(){
+  if(!team.length){
+    document.getElementById('tab-content').innerHTML = `<div class="empty-state">Aucun membre. Ajoutez votre équipe.</div>`;
+    return;
+  }
+  document.getElementById('tab-content').innerHTML = `<div class="grid">${team.map(m=>{
+    const actifs = projects.filter(p=>p.charge===m.nom && p.statut!=='livre').length;
+    return `
+    <div class="entity-card" data-action="edit-team" data-id="${m.id}">
+      <div class="entity-top">
+        <div class="avatar">${initials(m.nom)}</div>
+      </div>
+      <h3>${escapeHtml(m.nom)}</h3>
+      <div class="role">${escapeHtml(m.poste || '')}</div>
+      <div class="entity-line"><b>Email</b>${escapeHtml(m.email || '—')}</div>
+      <div class="entity-line"><b>Téléphone</b>${escapeHtml(m.telephone || '—')}</div>
+      <div class="workload"><b>${actifs}</b> projet${actifs>1?'s':''} en charge actuellement</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+/* ============ MODALS ============ */
+function closeModal(){
+  document.getElementById('modal-root').innerHTML = '';
+}
+function openModalShell(title, bodyHtml, footHtml){
+  document.getElementById('modal-root').innerHTML = `
+    <div class="backdrop" data-action="close-modal">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-head"><h2>${title}</h2><button class="btn btn-ghost btn-icon" data-action="close-modal">✕</button></div>
+        ${bodyHtml}
+        ${footHtml}
+      </div>
+    </div>`;
+}
+
+/* -- Project modal -- */
+function openProjectModal(id){
+  const p = id ? projects.find(x=>x.id===id) : null;
+  const teamOptions = team.map(t=>`<option value="${escapeHtml(t.nom)}" ${p&&p.charge===t.nom?'selected':''}>${escapeHtml(t.nom)}</option>`).join('');
+  const clientOptions = clients.map(c=>`<option value="${escapeHtml(c.nom)}" ${p&&p.client===c.nom?'selected':''}>${escapeHtml(c.nom)}</option>`).join('');
+  openModalShell(p ? 'Modifier le projet' : 'Nouveau projet', `
+    <form id="project-form" data-id="${p?p.id:''}">
+      <div class="modal-body">
+        <div class="field"><label>Nom du projet</label><input required name="nomProjet" value="${p?escapeHtml(p.nomProjet):''}" placeholder="Ex. Refonte site web"></div>
+        <div class="field"><label>Client</label>
+          <input list="client-list" name="client" required value="${p?escapeHtml(p.client):''}" placeholder="Nom du client">
+          <datalist id="client-list">${clients.map(c=>`<option value="${escapeHtml(c.nom)}">`).join('')}</datalist>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Date limite</label><input required type="date" name="dateLimite" value="${p?p.dateLimite:''}"></div>
+          <div class="field"><label>Statut</label>
+            <select name="statut">${Object.entries(STATUTS_PROJET).map(([k,v])=>`<option value="${k}" ${p&&p.statut===k?'selected':''}>${v.label}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Avancement (%)</label><input type="number" min="0" max="100" name="avancement" value="${p?p.avancement:0}"></div>
+          <div class="field"><label>Chargé de travail</label>
+            <input list="team-list" name="charge" value="${p?escapeHtml(p.charge||''):''}" placeholder="Nom">
+            <datalist id="team-list">${team.map(t=>`<option value="${escapeHtml(t.nom)}">`).join('')}</datalist>
+          </div>
+        </div>
+        <div class="field"><label>Notes / processus en cours</label><textarea name="notes" placeholder="Où en est le projet, prochaine étape...">${p?escapeHtml(p.notes||''):''}</textarea></div>
+      </div>
+    </form>
+  `, `
+    <div class="modal-foot">
+      ${p ? `<button class="btn btn-danger" data-action="delete-project" data-id="${p.id}">Supprimer</button>` : `<span></span>`}
+      <button class="btn btn-primary" type="submit" form="project-form">${p?'Enregistrer':'Créer le projet'}</button>
+    </div>
+  `);
+}
+async function submitProject(form){
+  const id = form.dataset.id;
+  const fd = new FormData(form);
+  const data = {
+    nomProjet: fd.get('nomProjet').trim(),
+    client: fd.get('client').trim(),
+    dateLimite: fd.get('dateLimite'),
+    statut: fd.get('statut'),
+    avancement: Math.max(0, Math.min(100, Number(fd.get('avancement')) || 0)),
+    charge: fd.get('charge').trim(),
+    notes: fd.get('notes').trim(),
+  };
+  if(id){
+    Object.assign(projects.find(p=>p.id===id), data);
+    await saveKey('opiom:projects', projects);
+    await logActivity('projet', `a modifié le projet « ${data.nomProjet} »`);
+  }else{
+    projects.push({id: uid(), ...data});
+    await saveKey('opiom:projects', projects);
+    await logActivity('projet', `a créé le projet « ${data.nomProjet} » pour ${data.client}`);
+  }
+  closeModal();
+  renderCurrent();
+}
+async function deleteProject(id){
+  if(!confirm('Supprimer ce projet ?')) return;
+  const proj = projects.find(p=>p.id===id);
+  projects = projects.filter(p=>p.id!==id);
+  await saveKey('opiom:projects', projects);
+  if(proj) await logActivity('projet', `a supprimé le projet « ${proj.nomProjet} »`);
+  closeModal();
+  renderCurrent();
+}
+
+/* -- Demande modal -- */
+function openDemandeModal(id){
+  const d = id ? demandes.find(x=>x.id===id) : null;
+  modalChecklist = d ? JSON.parse(JSON.stringify(d.checklist)) : [];
+  openModalShell(d ? 'Modifier la demande' : 'Nouvelle demande', `
+    <form id="demande-form" data-id="${d?d.id:''}">
+      <div class="modal-body">
+        <div class="field"><label>Titre</label><input required name="titre" value="${d?escapeHtml(d.titre):''}" placeholder="Ex. Valider les maquettes"></div>
+        <div class="field"><label>Projet lié</label>
+          <input list="proj-list" name="projet" value="${d?escapeHtml(d.projet||''):''}" placeholder="Optionnel">
+          <datalist id="proj-list">${projects.map(p=>`<option value="${escapeHtml(p.nomProjet)}">`).join('')}</datalist>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Statut</label><select name="statut">${Object.entries(STATUTS_DEMANDE).map(([k,v])=>`<option value="${k}" ${d&&d.statut===k?'selected':''}>${v.label}</option>`).join('')}</select></div>
+          <div class="field"><label>Date</label><input type="date" name="date" value="${d?d.date:new Date().toISOString().slice(0,10)}"></div>
+        </div>
+        <div class="field"><label>Description</label><textarea name="description" placeholder="Détails de la demande...">${d?escapeHtml(d.description||''):''}</textarea></div>
+        <div class="field">
+          <label>Checklist</label>
+          <div class="checklist-edit" id="checklist-edit"></div>
+          <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" id="add-check-item">+ Ajouter une tâche</button>
+        </div>
+      </div>
+    </form>
+  `, `
+    <div class="modal-foot">
+      ${d ? `<button class="btn btn-danger" data-action="delete-demande" data-id="${d.id}">Supprimer</button>` : `<span></span>`}
+      <button class="btn btn-primary" type="submit" form="demande-form">${d?'Enregistrer':'Créer la demande'}</button>
+    </div>
+  `);
+  renderChecklistEdit();
+  document.getElementById('add-check-item').addEventListener('click', ()=>{
+    modalChecklist.push({t:'', done:false});
+    renderChecklistEdit();
+  });
+}
+function renderChecklistEdit(){
+  const box = document.getElementById('checklist-edit');
+  box.innerHTML = modalChecklist.map((c,idx)=>`
+    <div class="row">
+      <input type="checkbox" data-ci="${idx}" class="ci-check" ${c.done?'checked':''}>
+      <input type="text" data-ci="${idx}" class="ci-text" value="${escapeHtml(c.t)}" placeholder="Tâche à faire">
+      <button type="button" class="del" data-ci="${idx}">✕</button>
+    </div>`).join('') || `<div style="font-size:12px;color:var(--cream-faint)">Aucune tâche pour le moment.</div>`;
+  box.querySelectorAll('.ci-check').forEach(el=>el.addEventListener('change', e=>{
+    modalChecklist[+e.target.dataset.ci].done = e.target.checked;
+  }));
+  box.querySelectorAll('.ci-text').forEach(el=>el.addEventListener('input', e=>{
+    modalChecklist[+e.target.dataset.ci].t = e.target.value;
+  }));
+  box.querySelectorAll('.del').forEach(el=>el.addEventListener('click', e=>{
+    modalChecklist.splice(+e.target.dataset.ci, 1);
+    renderChecklistEdit();
+  }));
+}
+async function submitDemande(form){
+  const id = form.dataset.id;
+  const fd = new FormData(form);
+  const data = {
+    titre: fd.get('titre').trim(),
+    projet: fd.get('projet').trim(),
+    statut: fd.get('statut'),
+    date: fd.get('date'),
+    description: fd.get('description').trim(),
+    checklist: modalChecklist.filter(c=>c.t.trim()).map(c=>({t:c.t.trim(), done:!!c.done})),
+  };
+  if(id){
+    Object.assign(demandes.find(d=>d.id===id), data);
+    await saveKey('opiom:demandes', demandes);
+    await logActivity('demande', `a modifié la demande « ${data.titre} »`);
+  }else{
+    demandes.push({id: uid(), ...data});
+    await saveKey('opiom:demandes', demandes);
+    await logActivity('demande', `a créé la demande « ${data.titre} »`);
+  }
+  closeModal();
+  renderCurrent();
+}
+async function deleteDemande(id){
+  if(!confirm('Supprimer cette demande ?')) return;
+  const dem = demandes.find(d=>d.id===id);
+  demandes = demandes.filter(d=>d.id!==id);
+  await saveKey('opiom:demandes', demandes);
+  if(dem) await logActivity('demande', `a supprimé la demande « ${dem.titre} »`);
+  closeModal();
+  renderCurrent();
+}
+
+/* -- Client modal -- */
+function openClientModal(id){
+  const c = id ? clients.find(x=>x.id===id) : null;
+  openModalShell(c ? 'Canevas client' : 'Nouveau client', `
+    <form id="client-form" data-id="${c?c.id:''}">
+      <div class="modal-body">
+        <div class="field"><label>Nom / entreprise</label><input required name="nom" value="${c?escapeHtml(c.nom):''}"></div>
+        <div class="field"><label>Secteur</label><input name="secteur" value="${c?escapeHtml(c.secteur||''):''}" placeholder="Ex. Beauté, Mode, Artisanat..."></div>
+        <div class="field-row">
+          <div class="field"><label>Contact principal</label><input name="contact" value="${c?escapeHtml(c.contact||''):''}"></div>
+          <div class="field"><label>Téléphone</label><input name="telephone" value="${c?escapeHtml(c.telephone||''):''}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Email</label><input type="email" name="email" value="${c?escapeHtml(c.email||''):''}"></div>
+          <div class="field"><label>Adresse</label><input name="adresse" value="${c?escapeHtml(c.adresse||''):''}"></div>
+        </div>
+        <div class="field"><label>Brief / notes</label><textarea name="brief" placeholder="Contexte, besoins, ton de marque...">${c?escapeHtml(c.brief||''):''}</textarea></div>
+      </div>
+    </form>
+  `, `
+    <div class="modal-foot">
+      ${c ? `<button class="btn btn-danger" data-action="delete-client" data-id="${c.id}">Supprimer</button>` : `<span></span>`}
+      <button class="btn btn-primary" type="submit" form="client-form">${c?'Enregistrer':'Créer le client'}</button>
+    </div>
+  `);
+}
+async function submitClient(form){
+  const id = form.dataset.id;
+  const fd = new FormData(form);
+  const data = {
+    nom: fd.get('nom').trim(),
+    secteur: fd.get('secteur').trim(),
+    contact: fd.get('contact').trim(),
+    telephone: fd.get('telephone').trim(),
+    email: fd.get('email').trim(),
+    adresse: fd.get('adresse').trim(),
+    brief: fd.get('brief').trim(),
+  };
+  if(id){
+    Object.assign(clients.find(c=>c.id===id), data);
+    await saveKey('opiom:clients', clients);
+    await logActivity('client', `a modifié la fiche de « ${data.nom} »`);
+  }else{
+    clients.push({id: uid(), ...data});
+    await saveKey('opiom:clients', clients);
+    await logActivity('client', `a ajouté le client « ${data.nom} »`);
+  }
+  closeModal();
+  renderCurrent();
+}
+async function deleteClient(id){
+  if(!confirm('Supprimer ce client ?')) return;
+  const cli = clients.find(c=>c.id===id);
+  clients = clients.filter(c=>c.id!==id);
+  await saveKey('opiom:clients', clients);
+  if(cli) await logActivity('client', `a supprimé le client « ${cli.nom} »`);
+  closeModal();
+  renderCurrent();
+}
+
+/* -- Team modal -- */
+function openTeamModal(id){
+  const m = id ? team.find(x=>x.id===id) : null;
+  openModalShell(m ? 'Membre de l\'équipe' : 'Nouveau membre', `
+    <form id="team-form" data-id="${m?m.id:''}">
+      <div class="modal-body">
+        <div class="field"><label>Nom</label><input required name="nom" value="${m?escapeHtml(m.nom):''}"></div>
+        <div class="field"><label>Poste</label><input required name="poste" value="${m?escapeHtml(m.poste||''):''}" placeholder="Ex. Chef de projet"></div>
+        <div class="field-row">
+          <div class="field"><label>Email</label><input type="email" name="email" value="${m?escapeHtml(m.email||''):''}"></div>
+          <div class="field"><label>Téléphone</label><input name="telephone" value="${m?escapeHtml(m.telephone||''):''}"></div>
+        </div>
+      </div>
+    </form>
+  `, `
+    <div class="modal-foot">
+      ${m ? `<button class="btn btn-danger" data-action="delete-team" data-id="${m.id}">Supprimer</button>` : `<span></span>`}
+      <button class="btn btn-primary" type="submit" form="team-form">${m?'Enregistrer':'Ajouter'}</button>
+    </div>
+  `);
+}
+async function submitTeam(form){
+  const id = form.dataset.id;
+  const fd = new FormData(form);
+  const data = {
+    nom: fd.get('nom').trim(),
+    poste: fd.get('poste').trim(),
+    email: fd.get('email').trim(),
+    telephone: fd.get('telephone').trim(),
+  };
+  if(id){
+    Object.assign(team.find(t=>t.id===id), data);
+    await saveKey('opiom:team', team);
+    await logActivity('equipe', `a modifié le profil de ${data.nom}`);
+  }else{
+    team.push({id: uid(), ...data});
+    await saveKey('opiom:team', team);
+    await logActivity('equipe', `a ajouté ${data.nom} (${data.poste}) à l'équipe`);
+  }
+  closeModal();
+  renderCurrent();
+}
+async function deleteTeam(id){
+  if(!confirm('Supprimer ce membre ?')) return;
+  const mem = team.find(t=>t.id===id);
+  team = team.filter(t=>t.id!==id);
+  await saveKey('opiom:team', team);
+  if(mem) await logActivity('equipe', `a retiré ${mem.nom} de l'équipe`);
+  closeModal();
+  renderCurrent();
+}
+
+/* ============ EVENT DELEGATION ============ */
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+  if(action === 'nav') switchTab(btn.dataset.tab);
+  else if(action === 'close-modal'){ if(e.target === btn) closeModal(); }
+  else if(action === 'new-project') openProjectModal();
+  else if(action === 'edit-project') openProjectModal(id);
+  else if(action === 'delete-project') await deleteProject(id);
+  else if(action === 'new-demande') openDemandeModal();
+  else if(action === 'edit-demande') openDemandeModal(id);
+  else if(action === 'delete-demande') await deleteDemande(id);
+  else if(action === 'new-client') openClientModal();
+  else if(action === 'edit-client') openClientModal(id);
+  else if(action === 'delete-client') await deleteClient(id);
+  else if(action === 'new-team') openTeamModal();
+  else if(action === 'edit-team') openTeamModal(id);
+  else if(action === 'delete-team') await deleteTeam(id);
+  else if(action === 'refresh'){ await loadAll(); renderCurrent(); showToast('Données actualisées'); }
+});
+document.addEventListener('change', async (e)=>{
+  if(e.target.dataset.action === 'toggle-check'){
+    await toggleCheck(e.target.dataset.id, +e.target.dataset.idx);
+  }
+});
+document.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const form = e.target;
+  if(form.id === 'project-form') await submitProject(form);
+  else if(form.id === 'demande-form') await submitDemande(form);
+  else if(form.id === 'client-form') await submitClient(form);
+  else if(form.id === 'team-form') await submitTeam(form);
+});
+
+/* ============ INIT ============ */
+(async function init(){
+  await window.opiomReady;
+  await ensureName();
+  await loadAll();
+  switchTab('dashboard');
+})();
+</script>
+</body>
+</html>
