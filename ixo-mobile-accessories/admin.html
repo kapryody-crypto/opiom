@@ -64,9 +64,13 @@ dialog::backdrop{background:rgba(5,8,30,.6)}
 label{display:block;font-size:.85rem;margin:10px 0 4px;color:var(--mut)}
 dialog input,dialog select,dialog textarea{width:100%}
 .msg{margin:0;font-size:.9rem;color:var(--mut)}
+
+#ixo-toast{position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:1000;max-width:min(520px,94vw);padding:14px 22px;border-radius:14px;background:#15285c;color:white;box-shadow:0 12px 36px #0007;font-weight:600;display:none;text-align:center}
+#ixo-toast.on{display:block}
 </style>
 </head>
 <body>
+<div id="ixo-toast" role="status" aria-live="polite"></div>
 <div id="app">
 <button id="adm-open" class="btn on" type="button">Connexion administrateur</button>
 <header class="hero"><div class="wrap">
@@ -163,7 +167,8 @@ function render(){
   ac.append(e,d);li.appendChild(ac);L.appendChild(li)});
  first=false}
 function all(){head();chips();render()}
-function touch(){dirty=true;$("msg").textContent="Modifications non publiées."}
+function notice(message){$("msg").textContent=message;var t=$("ixo-toast");t.textContent=message;t.classList.add("on");clearTimeout(window.ixoToastTimer);window.ixoToastTimer=setTimeout(function(){t.classList.remove("on")},6500)}
+function touch(){dirty=true;notice("Modifications enregistrées localement. Clique sur Publier les modifications pour les rendre visibles.")}
 function openF(i){editing=i;var p=i>=0?PHONES[i]:{brand:brand==="Toutes"?"":brand,model:"",spec:"",cond:"Neuf",stock:true,price:""};
  $("dt").textContent=i>=0?"Modifier le téléphone":"Ajouter un téléphone";
  $("f-b").value=p.brand;$("f-m").value=p.model;$("f-s").value=p.spec;$("f-c").value=p.cond;$("f-p").value=p.price;$("f-k").checked=p.stock;$("dlg").showModal()}
@@ -179,12 +184,24 @@ $("i-ok").onclick=function(){var out=[];$("imp").value.split("\n").forEach(funct
  PHONES=out;$("dlg2").close();touch();all()};
 $("q").addEventListener("input",render);$("sort").addEventListener("change",render);
 $("a-pub").onclick=async function(){
- if(!IXO_ADMIN){$("msg").textContent="Connexion administrateur requise.";return;}
- $("msg").textContent="Publication en cours…";
- const {data,error}=await sb.from("ixo_catalog").update({phones:PHONES,updated_at:new Date().toISOString(),version:VERSION+1}).eq("id",1).eq("version",VERSION).select("version,updated_at").maybeSingle();
- if(error){$("msg").textContent="Erreur de publication : "+error.message;return;}
- if(!data){$("msg").textContent="La liste a été modifiée ailleurs. Recharge la page avant de recommencer.";return;}
- VERSION=data.version;UPDATED=data.updated_at;dirty=false;$("msg").textContent="Modifications publiées pour tous les visiteurs.";all();
+ const btn=$("a-pub");
+ if(btn.disabled)return;
+ btn.disabled=true;btn.textContent="Publication en cours…";
+ try{
+  if(!await validateAdmin()){
+   IXO_ADMIN=false;$("app").removeAttribute("data-admin");
+   notice("Session expirée ou compte non autorisé. Reconnecte-toi.");
+   $("login-dialog").showModal();return;
+  }
+  IXO_ADMIN=true;
+  notice("Enregistrement des tarifs dans Supabase…");
+  const {data,error}=await sb.from("ixo_catalog").update({phones:PHONES,updated_at:new Date().toISOString(),version:VERSION+1}).eq("id",1).eq("version",VERSION).select("version,updated_at").maybeSingle();
+  if(error){notice("Échec de la publication : "+error.message);return;}
+  if(!data){notice("Une version plus récente existe. Recharge la page avant de publier.");return;}
+  VERSION=data.version;UPDATED=data.updated_at;dirty=false;
+  all();notice("✓ Catalogue publié ! Les clients verront les nouveaux prix.");
+ }catch(e){notice("Erreur de connexion : "+(e.message||String(e)));}
+ finally{btn.disabled=false;btn.textContent="Publier les modifications";}
 };
 $("a-exit").onclick=async function(){if(dirty&&!confirm("Quitter sans publier ? Les modifications seront perdues."))return;IXO_ADMIN=false;$("app").removeAttribute("data-admin");await sb.auth.signOut();await loadCatalog();};
 $("adm-open").onclick=async function(){if(await enterAdmin())return;$("login-dialog").showModal();};
