@@ -247,6 +247,50 @@
 </style>
 </head>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* OPIOM Auth: renseigner l'URL et la clé publique Supabase (jamais service_role). */
+window.OPIOM_CONFIG = {url: "SUPABASE_URL", anonKey: "SUPABASE_PUBLISHABLE_KEY"};
+</script>
+<style>
+#auth-gate{position:fixed;inset:0;background:#1b1815;color:#f2ece1;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;padding:24px}
+#auth-card{width:min(440px,100%);padding:32px;border:1px solid #463d31;border-radius:20px;background:#28231d}
+#auth-card h1{margin:0 0 12px;font-size:27px}#auth-card p{color:#b4a997}
+#auth-card input{display:block;width:100%;margin:12px 0;padding:14px;background:#1b1815;border:1px solid #463d31;color:white;border-radius:9px}
+#auth-card button{padding:13px 18px;background:#c6472e;color:white;border:0;border-radius:9px;cursor:pointer}
+#auth-card small{display:block;margin-top:12px;color:#f3b19f}
+#logout-opiom{position:fixed;right:16px;bottom:16px;z-index:9000;background:#c6472e;color:white;border:0;border-radius:9px;padding:10px;cursor:pointer}
+</style>
+<div id="auth-gate"><div id="auth-card"><h1>OPIOM · Connexion</h1><p>Accès réservé aux collaborateurs autorisés.</p><form id="auth-form"><input id="auth-email" type="email" autocomplete="username" placeholder="Adresse email" required><input id="auth-password" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="submit">Se connecter</button></form><small id="auth-error" role="alert"></small></div></div>
+<script>
+window.opiomReady=(async()=>{
+ const cfg=window.OPIOM_CONFIG;
+ const error=document.getElementById('auth-error');
+ if(!cfg.url.startsWith('https://')||cfg.anonKey==='SUPABASE_PUBLISHABLE_KEY'){error.textContent='Configuration Supabase manquante. Voir README.md';return new Promise(()=>{});}
+ const sb=window.supabase.createClient(cfg.url,cfg.anonKey);
+ window.opiomSupabase=sb;
+ async function check(){
+  const {data:{user},error:e}=await sb.auth.getUser();
+  if(e||!user)return false;
+  const {data:profile,error:pe}=await sb.from('profiles').select('role,active,display_name').eq('id',user.id).single();
+  if(pe||!profile?.active){error.textContent='Compte non activé. Contactez un administrateur.';await sb.auth.signOut();return false;}
+  window.opiomProfile=profile;window.opiomUser=user;
+  document.getElementById('auth-gate').remove();
+  const logout=document.createElement('button');logout.id='logout-opiom';logout.textContent='Déconnexion';
+  logout.onclick=async()=>{await sb.auth.signOut();location.reload()};document.body.appendChild(logout);
+  return true;
+ }
+ if(await check())return;
+ return new Promise(resolve=>{
+  document.getElementById('auth-form').onsubmit=async ev=>{
+   ev.preventDefault();error.textContent='Connexion en cours…';
+   const {error:e}=await sb.auth.signInWithPassword({email:document.getElementById('auth-email').value,password:document.getElementById('auth-password').value});
+   if(e){error.textContent='Identifiants invalides ou connexion impossible.';return;}
+   if(await check())resolve();
+  };
+ });
+})();
+</script>
 
 <div id="app">
   <aside class="sidebar">
@@ -301,6 +345,24 @@ const STATUTS_DEMANDE = {
   nouvelle: {label:'Nouvelle', css:'nouvelle'},
   en_cours: {label:'En cours', css:'en_cours'},
   terminee: {label:'Terminée', css:'terminee'},
+};
+
+
+// Stockage sécurisé via Supabase. Les politiques RLS restent la source de vérité.
+window.storage={
+ async get(key,shared){
+  if(!shared){return {value:window.opiomProfile.display_name||window.opiomUser.email};}
+  const {data,error}=await window.opiomSupabase.from('workspace_data').select('value').eq('key',key).maybeSingle();
+  if(error)throw error;
+  return data?{value:JSON.stringify(data.value)}:null;
+ },
+ async set(key,value,shared){
+  if(!shared){return;}
+  const {error}=await window.opiomSupabase.from('workspace_data').upsert({key,value:JSON.parse(value),updated_at:new Date().toISOString()},{onConflict:'key'});
+  if(error)throw error;
+  const {error:auditError}=await window.opiomSupabase.from('audit_events').insert({actor:window.opiomUser.id,action:'Mise à jour '+key});
+  if(auditError)console.warn('Audit non enregistré',auditError.message);
+ }
 };
 
 /* ============ SEED DATA ============ */
@@ -981,6 +1043,7 @@ document.addEventListener('submit', async (e)=>{
 
 /* ============ INIT ============ */
 (async function init(){
+  await window.opiomReady;
   await ensureName();
   await loadAll();
   switchTab('dashboard');
