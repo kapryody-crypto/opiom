@@ -61,3 +61,5 @@ grant execute on function public.has_workspace_role(text[]) to authenticated;
 grant select, update on public.profiles to authenticated;
 grant select, insert, update on public.workspace_data to authenticated;
 grant select, insert on public.audit_events to authenticated;
+
+revoke all on function public.new_user_profile() from public, anon, authenticated;
