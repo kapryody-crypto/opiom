@@ -250,7 +250,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 /* OPIOM Auth: renseigner l'URL et la clé publique Supabase (jamais service_role). */
-window.OPIOM_CONFIG = {url: "SUPABASE_URL", anonKey: "SUPABASE_PUBLISHABLE_KEY"};
+window.OPIOM_CONFIG = {url: "https://vzhoglufkwxliifdyanq.supabase.co", anonKey: "sb_publishable_7WABQEQaX7kzq2OFG8kXZA_1XPK9Pw3"};
 </script>
 <style>
 #auth-gate{position:fixed;inset:0;background:#1b1815;color:#f2ece1;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif;padding:24px}
@@ -266,7 +266,7 @@ window.OPIOM_CONFIG = {url: "SUPABASE_URL", anonKey: "SUPABASE_PUBLISHABLE_KEY"}
 window.opiomReady=(async()=>{
  const cfg=window.OPIOM_CONFIG;
  const error=document.getElementById('auth-error');
- if(!cfg.url.startsWith('https://')||cfg.anonKey==='SUPABASE_PUBLISHABLE_KEY'){error.textContent='Configuration Supabase manquante. Voir README.md';return new Promise(()=>{});}
+ if(!cfg.url.startsWith('https://')||!cfg.anonKey.startsWith('sb_publishable_')){error.textContent='Configuration Supabase manquante. Voir README.md';return new Promise(()=>{});}
  const sb=window.supabase.createClient(cfg.url,cfg.anonKey);
  window.opiomSupabase=sb;
  async function check(){
