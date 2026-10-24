@@ -358,6 +358,7 @@ window.storage={
  },
  async set(key,value,shared){
   if(!shared){return;}
+  if(key==='opiom:team'&&!['owner','admin'].includes(window.opiomProfile.role))throw new Error('Accès administrateur requis');
   const {error}=await window.opiomSupabase.from('workspace_data').upsert({key,value:JSON.parse(value),updated_at:new Date().toISOString()},{onConflict:'key'});
   if(error)throw error;
   const {error:auditError}=await window.opiomSupabase.from('audit_events').insert({actor:window.opiomUser.id,action:'Mise à jour '+key});
@@ -418,10 +419,10 @@ async function saveKey(key, value, silent){
 }
 async function loadAll(){
   [projects, clients, team, demandes, activity] = await Promise.all([
-    loadKey('opiom:projects', SEED_PROJECTS),
-    loadKey('opiom:clients', SEED_CLIENTS),
-    loadKey('opiom:team', SEED_TEAM),
-    loadKey('opiom:demandes', SEED_DEMANDES),
+    loadKey('opiom:projects', []),
+    loadKey('opiom:clients', []),
+    loadKey('opiom:team', []),
+    loadKey('opiom:demandes', []),
     loadKey('opiom:activity', []),
   ]);
 }
