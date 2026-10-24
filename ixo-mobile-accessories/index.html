@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>IXO MOBILE ACCESSORIES | Tarifs revendeurs</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f2f4fb;--card:#fff;--text:#12172e;--mut:#5b627f;--line:#dde1f0;--chip:#e8ecfb;--acc:#1b4bff;--gold:#b87900;--ok:#0a7a4b;--okbg:#dff5ea;--no:#a3361f;--nobg:#fbe6e1;--focus:#1b4bff;
@@ -67,7 +68,7 @@ dialog input,dialog select,dialog textarea{width:100%}
 </head>
 <body>
 <div id="app">
-<button id="adm-open" class="btn" type="button">Espace admin</button>
+<button id="adm-open" class="btn on" type="button">Espace admin</button>
 <header class="hero"><div class="wrap">
 <p>IXO MOBILE ACCESSORIES</p>
 <h1>Tarifs revendeurs</h1>
@@ -98,6 +99,7 @@ dialog input,dialog select,dialog textarea{width:100%}
 <button class="btn" id="a-exit" type="button">Quitter</button>
 <p class="msg" id="msg" role="status" data-render></p>
 </div>
+<dialog id="login-dialog"><form id="login-form"><h2>Administration IXO</h2><p class="msg">Connecte-toi avec ton compte administrateur OPIOM.</p><label for="login-email">Email</label><input id="login-email" type="email" required autocomplete="username"><label for="login-pass">Mot de passe</label><input id="login-pass" type="password" required autocomplete="current-password"><p class="msg" id="login-error" role="alert"></p><div class="row" style="margin-top:14px"><button class="btn p" type="submit">Connexion</button><button class="btn" type="button" id="login-cancel">Annuler</button></div></form></dialog>
 <dialog id="dlg"><form method="dialog" id="f">
 <h2 style="margin:0 0 6px" id="dt">Téléphone</h2>
 <label for="f-b">Marque</label><input id="f-b" required list="brands"><datalist id="brands" data-render></datalist>
@@ -124,7 +126,12 @@ dialog input,dialog select,dialog textarea{width:100%}
 {"brand":"Xiaomi","model":"Redmi 13C","spec":"128/4 Go","cond":"Neuf","stock":true,"price":59000}]}</script>
 <script>
 var $=function(i){return document.getElementById(i)};
-var S=JSON.parse($("seed").textContent),PHONES=S.phones,UPDATED=S.updated,brand="Toutes",editing=-1,first=true,dirty=false;
+var S=JSON.parse($("seed").textContent),PHONES=S.phones,UPDATED=S.updated,brand="Toutes",editing=-1,first=true,dirty=false,VERSION=1,IXO_ADMIN=false;
+var sb=window.supabase.createClient("https://vzhoglufkwxliifdyanq.supabase.co","sb_publishable_7WABQEQaX7kzq2OFG8kXZA_1XPK9Pw3");
+async function loadCatalog(){const {data,error}=await sb.from("ixo_catalog").select("phones,updated_at,version").eq("id",1).single();if(error){console.error("IXO catalog",error.message);$("count").textContent="Catalogue temporairement indisponible.";return;}PHONES=data.phones;UPDATED=data.updated_at;VERSION=data.version;all();}
+async function validateAdmin(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;const {data:p}=await sb.from("profiles").select("role,active").eq("id",user.id).maybeSingle();return !!(p&&p.active&&["owner","admin"].includes(p.role));}
+async function enterAdmin(){if(!await validateAdmin()){IXO_ADMIN=false;$("app").removeAttribute("data-admin");return false;}IXO_ADMIN=true;$("app").setAttribute("data-admin","");$("msg").textContent="Connecté : modifications réservées aux administrateurs.";return true;}
+
 var fmt=function(n){return Number(n).toLocaleString("fr-FR").replace(/\s/g,"\u202f")+"\u00a0F"};
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function count(node,to,f){var rm=matchMedia("(prefers-reduced-motion:reduce)").matches;if(rm||!first){node.textContent=f(to);return}
@@ -171,20 +178,19 @@ $("i-ok").onclick=function(){var out=[];$("imp").value.split("\n").forEach(funct
  if(!out.length){$("msg").textContent="Aucune ligne valide : vérifiez les 6 colonnes séparées par « ; ».";$("dlg2").close();return}
  PHONES=out;$("dlg2").close();touch();all()};
 $("q").addEventListener("input",render);$("sort").addEventListener("change",render);
-function buildHtml(){var c=document.documentElement.cloneNode(true);
- c.querySelectorAll("[data-render]").forEach(function(e){e.innerHTML=""});
- c.querySelector("#app").removeAttribute("data-admin");c.querySelector("#adm-open").className="btn";
- c.querySelectorAll("dialog").forEach(function(d){d.removeAttribute("open")});
- c.querySelector("#seed").textContent=JSON.stringify({updated:UPDATED,phones:PHONES}).replace(/</g,"\\u003c");
- return"<!DOCTYPE html>\n"+c.outerHTML}
 $("a-pub").onclick=async function(){
- try{var art=await claude.use("artifact");if(!art){$("msg").textContent="Publication indisponible pour ce compte.";return}
-  UPDATED=new Date().toISOString().slice(0,19);$("msg").textContent="Publication en cours…";await art.publish(buildHtml())}
- catch(e){$("msg").textContent=e&&e.code==="conflict"?"Une autre version vient d'être publiée : rechargement.":"Échec de la publication ("+((e&&e.code)||"erreur")+"). Réessayez."}};
-$("a-exit").onclick=function(){if(dirty&&!confirm("Quitter sans publier ? Les modifications seront perdues."))return;location.reload()};
-$("adm-open").onclick=function(){$("app").setAttribute("data-admin","");$("msg").textContent="";$("adm-open").className="btn"};
-all();
-(async function(){try{if(!window.claude||!claude.use)return;var u=await claude.use("user");if(u&&u.canEdit()&&(await claude.use("artifact")))$("adm-open").className="btn on"}catch(e){}})();
+ if(!IXO_ADMIN){$("msg").textContent="Connexion administrateur requise.";return;}
+ $("msg").textContent="Publication en cours…";
+ const {data,error}=await sb.from("ixo_catalog").update({phones:PHONES,updated_at:new Date().toISOString(),version:VERSION+1}).eq("id",1).eq("version",VERSION).select("version,updated_at").maybeSingle();
+ if(error){$("msg").textContent="Erreur de publication : "+error.message;return;}
+ if(!data){$("msg").textContent="La liste a été modifiée ailleurs. Recharge la page avant de recommencer.";return;}
+ VERSION=data.version;UPDATED=data.updated_at;dirty=false;$("msg").textContent="Modifications publiées pour tous les visiteurs.";all();
+};
+$("a-exit").onclick=async function(){if(dirty&&!confirm("Quitter sans publier ? Les modifications seront perdues."))return;IXO_ADMIN=false;$("app").removeAttribute("data-admin");await sb.auth.signOut();await loadCatalog();};
+$("adm-open").onclick=async function(){if(await enterAdmin())return;$("login-dialog").showModal();};
+$("login-cancel").onclick=function(){$("login-dialog").close();};
+$("login-form").onsubmit=async function(e){e.preventDefault();$("login-error").textContent="Connexion…";const {error}=await sb.auth.signInWithPassword({email:$("login-email").value.trim(),password:$("login-pass").value});if(error){$("login-error").textContent=error.message;return;}if(!await enterAdmin()){$("login-error").textContent="Compte sans autorisation administrateur IXO.";return;}$("login-dialog").close();$("login-pass").value="";};
+all();loadCatalog();
 </script>
 </body>
 </html>
