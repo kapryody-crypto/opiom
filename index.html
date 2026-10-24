@@ -285,7 +285,7 @@ window.opiomReady=(async()=>{
   document.getElementById('auth-form').onsubmit=async ev=>{
    ev.preventDefault();error.textContent='Connexion en cours…';
    const {error:e}=await sb.auth.signInWithPassword({email:document.getElementById('auth-email').value,password:document.getElementById('auth-password').value});
-   if(e){error.textContent='Identifiants invalides ou connexion impossible.';return;}
+   if(e){error.textContent= e.message || 'Connexion impossible. Vérifiez votre email et votre mot de passe.';return;}
    if(await check())resolve();
   };
  });
