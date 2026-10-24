@@ -136,10 +136,7 @@ function render(){
   li.append(el("p","brand",p.brand),el("h2","name",p.model),el("p","spec",p.spec));
   var a=el("span","tag",p.cond),b=el("span","tag "+(p.stock?"ok":"no"),p.stock?"Disponible":"Rupture");
   li.append(a,b,el("div","price",fmt(p.price)));
-  var ac=el("div","acts"),e=el("button","btn","Modifier"),d=el("button","btn d","Supprimer");e.type=d.type="button";
-  e.setAttribute("aria-label","Modifier "+p.model);d.setAttribute("aria-label","Supprimer "+p.model);
-  e.onclick=function(){openF(r.i)};d.onclick=function(){if(confirm("Supprimer "+p.model+" ?")){PHONES.splice(r.i,1);touch();all()}};
-  ac.append(e,d);li.appendChild(ac);L.appendChild(li)});
+  L.appendChild(li)});
  first=false}
 function all(){head();chips();render()}
 $("q").addEventListener("input",render);
