@@ -119,10 +119,10 @@ function head(){var d=new Date(UPDATED);
  $("maj").textContent="Prix revendeur des téléphones disponibles · mis à jour le "+d.toLocaleDateString("fr-FR")+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
  var av=PHONES.filter(function(p){return p.stock}),mn=PHONES.length?Math.min.apply(null,PHONES.map(function(p){return p.price})):0;
  count($("s1"),PHONES.length,String);count($("s2"),av.length,String);count($("s3"),mn,fmt)}
-function chips(){var c=$("chips");c.innerHTML="";$("brands").innerHTML="";
+function chips(){var c=$("chips");c.innerHTML="";
  var bs=PHONES.map(function(p){return p.brand}).filter(function(b,i,a){return a.indexOf(b)===i}).sort();
  if(bs.indexOf(brand)<0)brand="Toutes";
- bs.forEach(function(b){var o=document.createElement("option");o.value=b;$("brands").appendChild(o)});
+
  ["Toutes"].concat(bs).forEach(function(b){var li=el("li"),x=el("button","chip",b);x.type="button";x.setAttribute("aria-pressed",b===brand);
   x.onclick=function(){brand=b;chips();render()};li.appendChild(x);c.appendChild(li)})}
 function render(){
