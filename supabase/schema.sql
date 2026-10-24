@@ -4,7 +4,7 @@ create table if not exists public.profiles (
  id uuid primary key references auth.users(id) on delete cascade,
  display_name text not null default '',
  role text not null default 'member' check (role in ('owner','admin','manager','member')),
- active boolean not null default true,
+ active boolean not null default false,
  created_at timestamptz not null default now()
 );
 create table if not exists public.workspace_data (
@@ -53,3 +53,11 @@ create trigger on_auth_user_created_opiom after insert on auth.users for each ro
 -- IMPORTANT: après création du premier compte, promouvoir manuellement via SQL Editor :
 -- update public.profiles set role='owner', active=true where id=(select id from auth.users where email='VOTRE_EMAIL');
 -- Pour inviter des collaborateurs: créer les utilisateurs dans Supabase Auth puis activer leur profil.
+
+revoke all on function public.is_active_member() from public, anon;
+revoke all on function public.has_workspace_role(text[]) from public, anon;
+grant execute on function public.is_active_member() to authenticated;
+grant execute on function public.has_workspace_role(text[]) to authenticated;
+grant select, update on public.profiles to authenticated;
+grant select, insert, update on public.workspace_data to authenticated;
+grant select, insert on public.audit_events to authenticated;
