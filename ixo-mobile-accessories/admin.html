@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IXO MOBILE ACCESSORIES | Administration</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f4fb;--card:#fff;--text:#12172e;--mut:#5b627f;--line:#dde1f0;--chip:#e8ecfb;--acc:#1b4bff;--gold:#b87900;--ok:#0a7a4b;--okbg:#dff5ea;--no:#a3361f;--nobg:#fbe6e1;--focus:#1b4bff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#070a1c;--card:#10153a;--text:#eef0fb;--mut:#9fa6c7;--line:#252c5c;--chip:#1b2150;--acc:#7da0ff;--gold:#ffc83d;--ok:#5ee0a3;--okbg:#0f3326;--no:#ff9b85;--nobg:#3a1a16;--focus:#9db8ff}}
+:root[data-theme="dark"]{--bg:#070a1c;--card:#10153a;--text:#eef0fb;--mut:#9fa6c7;--line:#252c5c;--chip:#1b2150;--acc:#7da0ff;--gold:#ffc83d;--ok:#5ee0a3;--okbg:#0f3326;--no:#ff9b85;--nobg:#3a1a16;--focus:#9db8ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Sora,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+.hero{position:relative;overflow:hidden;background:#060a2a;color:#fff;padding:56px 0 64px}
+.hero:before,.hero:after{content:"";position:absolute;width:520px;height:520px;border-radius:50%;filter:blur(90px);opacity:.55}
+.hero:before{background:#1b4bff;left:-120px;top:-200px;animation:f1 14s ease-in-out infinite alternate}
+.hero:after{background:#ffb300;right:-160px;bottom:-320px;opacity:.35;animation:f2 17s ease-in-out infinite alternate}
+@keyframes f1{to{transform:translate(160px,90px)}}@keyframes f2{to{transform:translate(-200px,-60px)}}
+@media (prefers-reduced-motion:reduce){.hero:before,.hero:after{animation:none}.item{animation:none!important}}
+.hero .wrap{position:relative;z-index:1}
+.hero p{margin:0;color:#b9c3f2}
+h1{margin:8px 0 10px;font-size:clamp(2.2rem,8vw,4rem);line-height:1.02;font-weight:800;letter-spacing:-.02em}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:30px;max-width:560px}
+.stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:14px 16px;backdrop-filter:blur(8px)}
+.stat b{display:block;font-size:clamp(1.3rem,5vw,1.9rem);font-weight:800;color:#ffc83d}
+.stat span{font-size:.8rem;color:#c9d2f8}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);padding:14px 0 6px;border-bottom:1px solid var(--line)}
+.row{display:flex;gap:10px}
+.search{flex:1;min-width:0;padding:15px 18px;font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:14px}
+select,input,textarea{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 2px;margin:0;list-style:none}
+.chip,.btn{font:inherit;cursor:pointer;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 18px;white-space:nowrap}
+.chip{flex:none}.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"],:root:not([data-theme="light"]) .btn.p{color:#06103a}}
+:root[data-theme="dark"] .chip[aria-pressed="true"],:root[data-theme="dark"] .btn.p{color:#06103a}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.btn.d{color:var(--no)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.count{color:var(--mut);font-size:.88rem;margin:14px 2px}
+.list{list-style:none;margin:0 0 70px;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.item{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px 22px;overflow:hidden;animation:up .5s both}
+.item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--ok)}
+.item.out:before{background:var(--no)}
+@keyframes up{from{opacity:0;transform:translateY(14px)}}
+.brand{font-size:.78rem;color:var(--mut);margin:0}
+.name{margin:2px 0 2px;font-size:1.08rem;font-weight:700}
+.spec{margin:0 0 10px;color:var(--mut);font-size:.9rem}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--chip);margin-right:6px}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.no{background:var(--nobg);color:var(--no)}
+.price{margin-top:12px;font-size:1.6rem;font-weight:800;color:var(--gold)}
+.acts{display:none;gap:8px;margin-top:12px}
+#app[data-admin] .acts{display:flex}
+.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:40px 10px}
+.admin{display:none;position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+#app[data-admin] .admin{display:flex}
+#adm-open{position:fixed;right:14px;top:calc(12px + env(safe-area-inset-top,0px));z-index:8;display:none}
+#adm-open.on{display:inline-block;background:rgba(0,0,0,.45);color:#fff;border-color:rgba(255,255,255,.4)}
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--text);width:min(440px,92vw);padding:22px}
+dialog::backdrop{background:rgba(5,8,30,.6)}
+label{display:block;font-size:.85rem;margin:10px 0 4px;color:var(--mut)}
+dialog input,dialog select,dialog textarea{width:100%}
+.msg{margin:0;font-size:.9rem;color:var(--mut)}
+</style>
+</head>
+<body>
+<div id="app">
+<button id="adm-open" class="btn on" type="button">Connexion administrateur</button>
+<header class="hero"><div class="wrap">
+<p>IXO MOBILE ACCESSORIES</p>
+<h1>Tarifs revendeurs</h1>
+<p id="maj" data-render></p>
+<div class="stats">
+<div class="stat"><b id="s1" data-render></b><span>modèles</span></div>
+<div class="stat"><b id="s2" data-render></b><span>disponibles</span></div>
+<div class="stat"><b id="s3" data-render></b><span>à partir de</span></div>
+</div>
+</div></header>
+<div class="bar"><div class="wrap">
+<div class="row">
+<label for="q" style="position:absolute;left:-9999px">Rechercher un téléphone</label>
+<input id="q" class="search" type="search" placeholder="Chercher : marque, modèle, caractéristiques…" autocomplete="off">
+<label for="sort" style="position:absolute;left:-9999px">Trier</label>
+<select id="sort"><option value="n">Nom A-Z</option><option value="a">Prix croissant</option><option value="d">Prix décroissant</option></select>
+</div>
+<ul class="chips" id="chips" data-render aria-label="Filtrer par marque"></ul>
+</div></div>
+<main class="wrap">
+<p class="count" id="count" role="status" aria-live="polite" data-render></p>
+<ul class="list" id="list" data-render></ul>
+</main>
+<div class="admin" role="region" aria-label="Espace admin">
+<button class="btn p" id="a-add" type="button">Ajouter un téléphone</button>
+<button class="btn" id="a-imp" type="button">Importer une liste</button>
+<button class="btn p" id="a-pub" type="button">Publier les modifications</button>
+<button class="btn" id="a-exit" type="button">Quitter</button>
+<p class="msg" id="msg" role="status" data-render></p>
+</div>
+<dialog id="login-dialog"><form id="login-form"><h2>Administration IXO</h2><p class="msg">Connecte-toi avec ton compte administrateur OPIOM.</p><label for="login-email">Email</label><input id="login-email" type="email" required autocomplete="username"><label for="login-pass">Mot de passe</label><input id="login-pass" type="password" required autocomplete="current-password"><p class="msg" id="login-error" role="alert"></p><div class="row" style="margin-top:14px"><button class="btn p" type="submit">Connexion</button><button class="btn" type="button" id="login-cancel">Annuler</button></div></form></dialog>
+<dialog id="dlg"><form method="dialog" id="f">
+<h2 style="margin:0 0 6px" id="dt">Téléphone</h2>
+<label for="f-b">Marque</label><input id="f-b" required list="brands"><datalist id="brands" data-render></datalist>
+<label for="f-m">Modèle</label><input id="f-m" required>
+<label for="f-s">Stockage / RAM</label><input id="f-s" placeholder="128/4 Go">
+<label for="f-c">État</label><select id="f-c"><option>Neuf</option><option>Occasion</option><option>Reconditionné</option></select>
+<label for="f-p">Prix revendeur (F)</label><input id="f-p" type="number" min="0" step="500" required inputmode="numeric">
+<label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input id="f-k" type="checkbox" style="width:auto"> Disponible</label>
+<div class="row" style="margin-top:18px;justify-content:flex-end"><button class="btn" value="x" type="button" id="f-x">Annuler</button><button class="btn p" type="submit">Enregistrer</button></div>
+</form></dialog>
+<dialog id="dlg2"><h2 style="margin:0 0 6px">Importer une liste</h2>
+<p class="msg">Une ligne par téléphone : Marque;Modèle;Stockage;État;oui ou non;Prix. Remplace toute la liste.</p>
+<textarea id="imp" rows="9" placeholder="Honor;Honor X7b;128/8 Go;Neuf;oui;78000"></textarea>
+<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" id="i-x" type="button">Annuler</button><button class="btn p" id="i-ok" type="button">Remplacer la liste</button></div></dialog>
+</div>
+<script id="seed" type="application/json">{"updated":"2026-10-24T00:57:00","phones":[
+{"brand":"Bebe Tab","model":"Bebe Tab B88 mill","spec":"128/4 Go","cond":"Neuf","stock":true,"price":37000},
+{"brand":"Bebe Tab","model":"Bebe Tab B2050","spec":"128/4 Go","cond":"Neuf","stock":true,"price":42500},
+{"brand":"Bebe Tab","model":"Bebe Tab Bebe tech","spec":"128/4 Go","cond":"Neuf","stock":true,"price":42500},
+{"brand":"Google Pixel","model":"Google Pixel 7","spec":"128/8 Go","cond":"Occasion","stock":true,"price":145000},
+{"brand":"Honor","model":"Honor X7b","spec":"128/8 Go","cond":"Neuf","stock":true,"price":78000},
+{"brand":"Huawei","model":"Huawei Nova Y61","spec":"64/4 Go","cond":"Neuf","stock":false,"price":62000},
+{"brand":"Samsung","model":"Samsung Galaxy A15","spec":"128/4 Go","cond":"Neuf","stock":true,"price":72500},
+{"brand":"Xiaomi","model":"Redmi 13C","spec":"128/4 Go","cond":"Neuf","stock":true,"price":59000}]}</script>
+<script>
+var $=function(i){return document.getElementById(i)};
+var S=JSON.parse($("seed").textContent),PHONES=S.phones,UPDATED=S.updated,brand="Toutes",editing=-1,first=true,dirty=false,VERSION=1,IXO_ADMIN=false;
+var sb=window.supabase.createClient("https://vzhoglufkwxliifdyanq.supabase.co","sb_publishable_7WABQEQaX7kzq2OFG8kXZA_1XPK9Pw3");
+async function loadCatalog(){const {data,error}=await sb.from("ixo_catalog").select("phones,updated_at,version").eq("id",1).single();if(error){console.error("IXO catalog",error.message);$("count").textContent="Catalogue temporairement indisponible.";return;}PHONES=data.phones;UPDATED=data.updated_at;VERSION=data.version;all();}
+async function validateAdmin(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;const {data:p}=await sb.from("profiles").select("role,active").eq("id",user.id).maybeSingle();return !!(p&&p.active&&["owner","admin"].includes(p.role));}
+async function enterAdmin(){if(!await validateAdmin()){IXO_ADMIN=false;$("app").removeAttribute("data-admin");return false;}IXO_ADMIN=true;$("app").setAttribute("data-admin","");$("msg").textContent="Connecté : modifications réservées aux administrateurs.";return true;}
+
+var fmt=function(n){return Number(n).toLocaleString("fr-FR").replace(/\s/g,"\u202f")+"\u00a0F"};
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function count(node,to,f){var rm=matchMedia("(prefers-reduced-motion:reduce)").matches;if(rm||!first){node.textContent=f(to);return}
+ var t0=performance.now();(function s(t){var k=Math.min(1,(t-t0)/1100),e=1-Math.pow(1-k,3);node.textContent=f(Math.round(to*e));if(k<1)requestAnimationFrame(s)})(t0)}
+function head(){var d=new Date(UPDATED);
+ $("maj").textContent="Prix revendeur des téléphones disponibles · mis à jour le "+d.toLocaleDateString("fr-FR")+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+ var av=PHONES.filter(function(p){return p.stock}),mn=PHONES.length?Math.min.apply(null,PHONES.map(function(p){return p.price})):0;
+ count($("s1"),PHONES.length,String);count($("s2"),av.length,String);count($("s3"),mn,fmt)}
+function chips(){var c=$("chips");c.innerHTML="";$("brands").innerHTML="";
+ var bs=PHONES.map(function(p){return p.brand}).filter(function(b,i,a){return a.indexOf(b)===i}).sort();
+ if(bs.indexOf(brand)<0)brand="Toutes";
+ bs.forEach(function(b){var o=document.createElement("option");o.value=b;$("brands").appendChild(o)});
+ ["Toutes"].concat(bs).forEach(function(b){var li=el("li"),x=el("button","chip",b);x.type="button";x.setAttribute("aria-pressed",b===brand);
+  x.onclick=function(){brand=b;chips();render()};li.appendChild(x);c.appendChild(li)})}
+function render(){
+ var q=$("q").value.trim().toLowerCase(),L=$("list");L.innerHTML="";
+ var rows=PHONES.map(function(p,i){return{p:p,i:i}}).filter(function(r){var p=r.p;return(brand==="Toutes"||p.brand===brand)&&(p.brand+" "+p.model+" "+p.spec+" "+p.cond).toLowerCase().indexOf(q)>-1});
+ var m=$("sort").value;rows.sort(function(a,b){return m==="a"?a.p.price-b.p.price:m==="d"?b.p.price-a.p.price:a.p.model.localeCompare(b.p.model)});
+ $("count").textContent=rows.length+(rows.length>1?" téléphones":" téléphone");
+ if(!rows.length){L.appendChild(el("li","empty","Aucun téléphone ne correspond. Essayez un autre mot ou choisissez « Toutes »."));return}
+ rows.forEach(function(r,k){var p=r.p,li=el("li","item"+(p.stock?"":" out"));
+  if(first)li.style.animationDelay=Math.min(k,12)*55+"ms";else li.style.animation="none";
+  li.append(el("p","brand",p.brand),el("h2","name",p.model),el("p","spec",p.spec));
+  var a=el("span","tag",p.cond),b=el("span","tag "+(p.stock?"ok":"no"),p.stock?"Disponible":"Rupture");
+  li.append(a,b,el("div","price",fmt(p.price)));
+  var ac=el("div","acts"),e=el("button","btn","Modifier"),d=el("button","btn d","Supprimer");e.type=d.type="button";
+  e.setAttribute("aria-label","Modifier "+p.model);d.setAttribute("aria-label","Supprimer "+p.model);
+  e.onclick=function(){openF(r.i)};d.onclick=function(){if(confirm("Supprimer "+p.model+" ?")){PHONES.splice(r.i,1);touch();all()}};
+  ac.append(e,d);li.appendChild(ac);L.appendChild(li)});
+ first=false}
+function all(){head();chips();render()}
+function touch(){dirty=true;$("msg").textContent="Modifications non publiées."}
+function openF(i){editing=i;var p=i>=0?PHONES[i]:{brand:brand==="Toutes"?"":brand,model:"",spec:"",cond:"Neuf",stock:true,price:""};
+ $("dt").textContent=i>=0?"Modifier le téléphone":"Ajouter un téléphone";
+ $("f-b").value=p.brand;$("f-m").value=p.model;$("f-s").value=p.spec;$("f-c").value=p.cond;$("f-p").value=p.price;$("f-k").checked=p.stock;$("dlg").showModal()}
+$("f").onsubmit=function(e){e.preventDefault();var p={brand:$("f-b").value.trim(),model:$("f-m").value.trim(),spec:$("f-s").value.trim(),cond:$("f-c").value,stock:$("f-k").checked,price:Math.max(0,parseInt($("f-p").value,10)||0)};
+ if(editing>=0)PHONES[editing]=p;else PHONES.push(p);$("dlg").close();touch();all()};
+$("f-x").onclick=function(){$("dlg").close()};
+$("a-add").onclick=function(){openF(-1)};
+$("a-imp").onclick=function(){$("imp").value="";$("dlg2").showModal()};
+$("i-x").onclick=function(){$("dlg2").close()};
+$("i-ok").onclick=function(){var out=[];$("imp").value.split("\n").forEach(function(l){var c=l.split(";").map(function(x){return x.trim()});
+ if(c.length>=6&&c[1]&&parseInt(c[5].replace(/\D/g,""),10)>=0&&c[5])out.push({brand:c[0],model:c[1],spec:c[2],cond:c[3]||"Neuf",stock:/^(oui|o|1|true|yes)$/i.test(c[4]),price:parseInt(c[5].replace(/\D/g,""),10)})});
+ if(!out.length){$("msg").textContent="Aucune ligne valide : vérifiez les 6 colonnes séparées par « ; ».";$("dlg2").close();return}
+ PHONES=out;$("dlg2").close();touch();all()};
+$("q").addEventListener("input",render);$("sort").addEventListener("change",render);
+$("a-pub").onclick=async function(){
+ if(!IXO_ADMIN){$("msg").textContent="Connexion administrateur requise.";return;}
+ $("msg").textContent="Publication en cours…";
+ const {data,error}=await sb.from("ixo_catalog").update({phones:PHONES,updated_at:new Date().toISOString(),version:VERSION+1}).eq("id",1).eq("version",VERSION).select("version,updated_at").maybeSingle();
+ if(error){$("msg").textContent="Erreur de publication : "+error.message;return;}
+ if(!data){$("msg").textContent="La liste a été modifiée ailleurs. Recharge la page avant de recommencer.";return;}
+ VERSION=data.version;UPDATED=data.updated_at;dirty=false;$("msg").textContent="Modifications publiées pour tous les visiteurs.";all();
+};
+$("a-exit").onclick=async function(){if(dirty&&!confirm("Quitter sans publier ? Les modifications seront perdues."))return;IXO_ADMIN=false;$("app").removeAttribute("data-admin");await sb.auth.signOut();await loadCatalog();};
+$("adm-open").onclick=async function(){if(await enterAdmin())return;$("login-dialog").showModal();};
+$("login-cancel").onclick=function(){$("login-dialog").close();};
+$("login-form").onsubmit=async function(e){e.preventDefault();$("login-error").textContent="Connexion…";const {error}=await sb.auth.signInWithPassword({email:$("login-email").value.trim(),password:$("login-pass").value});if(error){$("login-error").textContent=error.message;return;}if(!await enterAdmin()){$("login-error").textContent="Compte sans autorisation administrateur IXO.";return;}$("login-dialog").close();$("login-pass").value="";};
+all();loadCatalog();
+</script>
+</body>
+</html>
