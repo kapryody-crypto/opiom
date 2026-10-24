@@ -261,7 +261,7 @@ window.OPIOM_CONFIG = {url: "https://vzhoglufkwxliifdyanq.supabase.co", anonKey:
 #auth-card small{display:block;margin-top:12px;color:#f3b19f}
 #logout-opiom{position:fixed;right:16px;bottom:16px;z-index:9000;background:#c6472e;color:white;border:0;border-radius:9px;padding:10px;cursor:pointer}
 </style>
-<div id="auth-gate"><div id="auth-card"><h1>OPIOM · Connexion</h1><p>Accès réservé aux collaborateurs autorisés.</p><form id="auth-form"><input id="auth-email" type="email" autocomplete="username" placeholder="Adresse email" required><input id="auth-password" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="submit">Se connecter</button></form><small id="auth-error" role="alert"></small></div></div>
+<div id="auth-gate"><div id="auth-card"><h1>OPIOM · Connexion</h1><p>Accès réservé aux collaborateurs autorisés.</p><form id="auth-form"><input id="auth-email" type="email" autocomplete="username" placeholder="Adresse email" required><input id="auth-password" type="password" autocomplete="current-password" placeholder="Mot de passe" required><button type="submit">Se connecter</button></form><button type="button" id="forgot-password" style="margin-top:12px;background:transparent;color:#f3b19f;padding:8px 0;text-decoration:underline">Mot de passe oublié ?</button><div id="reset-password-panel" hidden><p>Choisis un nouveau mot de passe.</p><form id="reset-password-form"><input id="new-password" type="password" minlength="8" autocomplete="new-password" placeholder="Nouveau mot de passe (8 caractères minimum)" required><button type="submit">Enregistrer le nouveau mot de passe</button></form></div><small id="auth-error" role="alert"></small></div></div>
 <script>
 window.opiomReady=(async()=>{
  const cfg=window.OPIOM_CONFIG;
@@ -280,6 +280,24 @@ window.opiomReady=(async()=>{
   logout.onclick=async()=>{await sb.auth.signOut();location.reload()};document.body.appendChild(logout);
   return true;
  }
+ const resetPanel=document.getElementById('reset-password-panel');
+ const params=new URLSearchParams(location.hash.slice(1));
+ if(params.get('type')==='recovery')resetPanel.hidden=false;
+ sb.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY'){resetPanel.hidden=false;error.textContent='Définis ton nouveau mot de passe ci-dessous.';}});
+ document.getElementById('forgot-password').onclick=async()=>{
+  const email=document.getElementById('auth-email').value.trim();
+  if(!email){error.textContent='Saisis ton adresse email avant de demander la récupération.';return;}
+  error.textContent='Envoi du lien de récupération…';
+  const {error:e}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://kapryody-crypto.github.io/opiom/'});
+  error.textContent=e?('Envoi impossible : '+e.message):'Si cette adresse possède un compte, un email de récupération a été envoyé. Vérifie aussi les spams.';
+ };
+ document.getElementById('reset-password-form').onsubmit=async ev=>{
+  ev.preventDefault();error.textContent='Enregistrement…';
+  const {error:e}=await sb.auth.updateUser({password:document.getElementById('new-password').value});
+  if(e){error.textContent=e.message;return;}
+  history.replaceState(null,'',location.pathname);resetPanel.hidden=true;error.textContent='Mot de passe mis à jour. Connexion en cours…';
+  if(await check())window.location.reload();
+ };
  if(await check())return;
  return new Promise(resolve=>{
   document.getElementById('auth-form').onsubmit=async ev=>{
