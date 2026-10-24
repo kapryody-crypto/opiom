@@ -147,6 +147,10 @@ async function loadCatalog(){
  PHONES=data.phones;UPDATED=data.updated_at;all();
 }
 all();loadCatalog();
+// Actualiser le catalogue après les publications depuis l’administration.
+document.addEventListener("visibilitychange",function(){if(!document.hidden)loadCatalog()});
+window.addEventListener("focus",loadCatalog);
+setInterval(function(){if(!document.hidden)loadCatalog()},30000);
 </script>
 </body>
 </html>
